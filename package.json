@@ -1,6 +1,6 @@
 {
     "name": "leaflet-locatecontrol-capacitor",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "author": "Tête Chercheuse",
     "license": "MIT",
     "homepage": "https://github.com/tete-chercheuse/leaflet-locatecontrol-capacitor",
@@ -12,8 +12,8 @@
     },
     "scripts": {
         "build": "grunt",
-        "bump:minor": "grunt bump-only:minor && grunt && grunt bump-commit",
-        "bump:patch": "grunt bump-only:patch && grunt && grunt bump-commit",
+        "bump:minor": "grunt bump-only:minor && grunt",
+        "bump:patch": "grunt bump-only:patch && grunt",
         "lint": "eslint . && stylelint **/*.scss",
         "lint:fix": "eslint --fix . && stylelint --fix {**/style.css,**/*.scss}",
         "start": "grunt connect"
