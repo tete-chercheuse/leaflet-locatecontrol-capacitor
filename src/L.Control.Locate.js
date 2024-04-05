@@ -4,6 +4,8 @@ Copyright (c) 2016 Dominik Moritz
 This file is part of the leaflet locate control. It is licensed under the MIT license.
 You can find the project at: https://github.com/domoritz/leaflet-locatecontrol
 */
+import { Geolocation } from "@capacitor/geolocation";
+
 (function(factory, window) {
   // see https://github.com/Leaflet/Leaflet/blob/master/PLUGIN-GUIDE.md#module-loaders
   // for details on how to structure a leaflet plugin.
@@ -94,13 +96,13 @@ You can find the project at: https://github.com/domoritz/leaflet-locatecontrol
       const s = r + w;
       const s2 = s * 2;
       const svg =
-        `<svg xmlns="http://www.w3.org/2000/svg" width="${s2}" height="${s2}" version="1.1" viewBox="-${s} -${s} ${s2} ${s2}">` +
-        "<circle r=\"" +
+        `<svg xmlns="http://www.w3.org/2000/svg" width="${s2}" height="${s2}" viewBox="-${s} -${s} ${s2} ${s2}">` +
+        `<circle r="` +
         r +
-        "\" style=\"" +
+        `" style="` +
         style +
-        "\" />" +
-        "</svg>";
+        `" />` +
+        `</svg>`;
       return {
         className: "leaflet-control-locate-location",
         svg,
@@ -137,13 +139,13 @@ You can find the project at: https://github.com/domoritz/leaflet-locatecontrol
       const path = `M0,0 l${options.width / 2},${options.depth} l-${w},0 z`;
       const svgstyle = `transform: rotate(${this._heading}deg)`;
       const svg =
-        `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" version="1.1" viewBox="-${w / 2} 0 ${w} ${h}" style="${svgstyle}">` +
-        "<path d=\"" +
+        `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="-${w / 2} 0 ${w} ${h}" style="${svgstyle}">` +
+        `<path d="` +
         path +
-        "\" style=\"" +
+        `" style="` +
         style +
-        "\" />" +
-        "</svg>";
+        `" />` +
+        `</svg>`;
       return {
         className: "leaflet-control-locate-heading",
         svg,
@@ -491,36 +493,32 @@ You can find the project at: https://github.com/domoritz/leaflet-locatecontrol
      * It should set the this._active to true and do nothing if
      * this._active is true.
      */
-    _activate() {
-      if(this._active || !this._map) {
-        return;
-      }
-
-      this._map.locate(this.options.locateOptions);
-      this._map.fire("locateactivate", this);
-      this._active = true;
-
-      // bind event listeners
-      this._map.on("locationfound", this._onLocationFound, this);
-      this._map.on("locationerror", this._onLocationError, this);
-      this._map.on("dragstart", this._onDrag, this);
-      this._map.on("zoomstart", this._onZoom, this);
-      this._map.on("zoomend", this._onZoomEnd, this);
-      if(this.options.showCompass) {
-        const oriAbs = "ondeviceorientationabsolute" in window;
-        if(oriAbs || "ondeviceorientation" in window) {
-          const _this = this;
-          const deviceorientation = function() {
-            L.DomEvent.on(window, oriAbs ? "deviceorientationabsolute" : "deviceorientation", _this._onDeviceOrientation, _this);
-          };
-          if(DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === "function") {
-            DeviceOrientationEvent.requestPermission().then(function(permissionState) {
-              if(permissionState === "granted") {
-                deviceorientation();
-              }
-            });
+    async _activate() {
+      if(!this._active) {
+        this._active = true;
+        let coords = await Geolocation.getCurrentPosition({ enableHighAccuracy: true });
+        this._setEvent(coords.coords.latitude, coords.coords.longitude, coords.coords.accuracy);
+        this.geolocationWatcherId = await Geolocation.watchPosition({
+          enableHighAccuracy: true
+        }, (position) => {
+          try {
+            this._onLocationFound(position);
           }
-          else {
+          catch(e) {
+            this._onLocationError(e);
+          }
+        });
+
+        // bind event listeners               
+        this._map.on("dragstart", this._onDrag, this);
+        this._map.on("zoomstart", this._onZoom, this);
+        this._map.on("zoomend", this._onZoomEnd, this);
+        if(this.options.showCompass) {
+          const oriAbs = "ondeviceorientationabsolute" in window;
+          if(oriAbs || ("ondeviceorientation" in window)) {
+            const deviceorientation = () => {
+              L.DomEvent.on(window, oriAbs ? "deviceorientationabsolute" : "deviceorientation", this._onDeviceOrientation, this);
+            };
             deviceorientation();
           }
         }
@@ -533,21 +531,14 @@ You can find the project at: https://github.com/domoritz/leaflet-locatecontrol
      * Override it to shutdown any functionalities you added on start.
      */
     _deactivate() {
-      if(!this._active || !this._map) {
-        return;
-      }
-
-      this._map.stopLocate();
-      this._map.fire("locatedeactivate", this);
+      if(this.geolocationWatcherId) Geolocation.clearWatch({ id: this.geolocationWatcherId });
       this._active = false;
 
       if(!this.options.cacheLocation) {
         this._event = undefined;
       }
 
-      // unbind event listeners
-      this._map.off("locationfound", this._onLocationFound, this);
-      this._map.off("locationerror", this._onLocationError, this);
+      // unbind event listeners           
       this._map.off("dragstart", this._onDrag, this);
       this._map.off("zoomstart", this._onZoom, this);
       this._map.off("zoomend", this._onZoomEnd, this);
@@ -765,7 +756,7 @@ You can find the project at: https://github.com/domoritz/leaflet-locatecontrol
      */
     _onLocationError(err) {
       // ignore time out error if the location is watched
-      if(err.code == 3 && this.options.locateOptions.watch) {
+      if(this.geolocationWatcherId) {
         return;
       }
 
@@ -917,21 +908,21 @@ You can find the project at: https://github.com/domoritz/leaflet-locatecontrol
      * Sets the CSS classes for the state.
      */
     _setClasses(state) {
-      if(state == "requesting") {
+      if(state === "requesting") {
         removeClasses(this._container, "active following");
         addClasses(this._container, "requesting");
 
         removeClasses(this._icon, this.options.icon);
         addClasses(this._icon, this.options.iconLoading);
       }
-      else if(state == "active") {
+      else if(state === "active") {
         removeClasses(this._container, "requesting following");
         addClasses(this._container, "active");
 
         removeClasses(this._icon, this.options.iconLoading);
         addClasses(this._icon, this.options.icon);
       }
-      else if(state == "following") {
+      else if(state === "following") {
         removeClasses(this._container, "requesting");
         addClasses(this._container, "active following");
 
