@@ -14,8 +14,8 @@
         "build": "grunt",
         "bump:minor": "grunt bump-only:minor && grunt && grunt bump-commit",
         "bump:patch": "grunt bump-only:patch && grunt && grunt bump-commit",
-        "lint": "eslint . && stylelint **/*.scss && npx prettier --check .",
-        "lint:fix": "eslint --fix . && stylelint --fix {**/style.css,**/*.scss} && npx prettier --write .",
+        "lint": "eslint . && stylelint **/*.scss",
+        "lint:fix": "eslint --fix . && stylelint --fix {**/style.css,**/*.scss}",
         "start": "grunt connect"
     },
     "devDependencies": {
@@ -27,12 +27,14 @@
         "grunt-contrib-connect": "^3.0.0",
         "grunt-contrib-sass": "^2.0.0",
         "grunt-contrib-uglify": "^5.2.2",
-        "prettier": "^2.8.0",
         "sass": "^1.56.1",
         "stylelint": "^14.10.0",
         "stylelint-config-prettier-scss": "^0.0.1",
         "stylelint-config-recommended-scss": "^8.0.0",
         "stylelint-prettier": "^2.0.0",
         "stylelint-scss": "^4.3.0"
+    },
+    "dependencies": {
+        "@capacitor/geolocation": "^5.0.7"
     }
 }

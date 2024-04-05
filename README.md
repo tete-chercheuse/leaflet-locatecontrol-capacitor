@@ -1,18 +1,8 @@
 # Leaflet.Locate
 
-[![npm version](https://badge.fury.io/js/leaflet.locatecontrol.svg)](http://badge.fury.io/js/leaflet.locatecontrol)
-[![jsDelivr Hits](https://data.jsdelivr.com/v1/package/npm/leaflet.locatecontrol/badge?style=rounded)](https://www.jsdelivr.com/package/npm/leaflet.locatecontrol)
-
-A useful control to geolocate the user with many options. Official [Leaflet](http://leafletjs.com/plugins.html#geolocation) and [MapBox plugin](https://www.mapbox.com/mapbox.js/example/v1.0.0/leaflet-locatecontrol/).
+A useful control to geolocate the user with many options.
 
 Tested with [Leaflet](http://leafletjs.com/) 1.9.2 and [Mapbox.js](https://docs.mapbox.com/mapbox.js/) 3.3.1 in Firefox, Chrome and Safari.
-
-Please check for [breaking changes in the changelog](https://github.com/domoritz/leaflet-locatecontrol/blob/gh-pages/CHANGELOG.md).
-
-## Demo
-
-- [Demo with Leaflet](https://domoritz.github.io/leaflet-locatecontrol/demo/)
-- [Demo with Mapbox.js](https://domoritz.github.io/leaflet-locatecontrol/demo_mapbox/)
 
 ## Basic Usage
 
@@ -28,21 +18,22 @@ tl;dr
 
 For testing purposes and development, you can use the latest version directly from my repository.
 
-For production environments, use [Bower](http://bower.io/) and run `bower install leaflet.locatecontrol` or [download the files from this repository](https://github.com/domoritz/leaflet-locatecontrol/archive/gh-pages.zip). Bower will always download the latest version and keep the code up to date. The original JS and CSS files are in [`\src`](https://github.com/domoritz/leaflet-locatecontrol/tree/gh-pages/src) and the minified versions suitable for production are in [`\dist`](https://github.com/domoritz/leaflet-locatecontrol/tree/gh-pages/dist).
+For production environments, use [Bower](http://bower.io/) and run `bower install --save tete-chercheuse/leaflet-locatecontrol-capacitor` or [download the files from this repository](https://github.com/domoritz/leaflet-locatecontrol/archive/gh-pages.zip). Bower will always download the latest version and keep the code up to date. The original JS and CSS files are in [`\src`](https://github.com/domoritz/leaflet-locatecontrol/tree/gh-pages/src) and the minified versions suitable for production are in [`\dist`](https://github.com/domoritz/leaflet-locatecontrol/tree/gh-pages/dist).
 
-You can also get the latest version of the plugin with [npm](https://www.npmjs.org/). This plugin is available in the [npm repository](https://www.npmjs.org/package/leaflet.locatecontrol). Just run `npm install leaflet.locatecontrol`.
+You can also get the latest version of the plugin with [npm](https://www.npmjs.org/). This plugin is available in the [npm repository](https://www.npmjs.org/package/leaflet.locatecontrol). Just run `npm install --save tete-chercheuse/leaflet-locatecontrol-capacitor`.
 
 The control is [available from JsDelivr CDN](https://www.jsdelivr.com/projects/leaflet.locatecontrol). If you don't need the latest version, you can use the [mapbox CDN](https://www.mapbox.com/mapbox.js/plugins/#leaflet-locatecontrol).
 
 #### Add the JavaScript and CSS files
 
-Then include the CSS and JavaScript files. 
+Then include the CSS and JavaScript files.
 
 ##### With CDN
 
 In this example, we are loading the [files from the JsDelivr CDN](https://www.jsdelivr.com/package/npm/leaflet.locatecontrol?path=dist). In the URLs below, replace `[VERSION]` with the latest release number or remove `@[VERSION]` to always use the latest version.
 
 ```html
+
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@[VERSION]/dist/L.Control.Locate.min.css" />
 <script src="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@[VERSION]/dist/L.Control.Locate.min.js" charset="utf-8"></script>
 ```
@@ -76,6 +67,7 @@ L.control.locate(OPTIONS).addTo(map);
 Possible options are listed in the following table. More details are [in the code](https://github.com/domoritz/leaflet-locatecontrol/blob/gh-pages/src/L.Control.Locate.js#L31).
 
 <!-- prettier-ignore-start -->
+
 | Option     | Type      | Description       |  Default |
 |------------|-----------|-------------------|----------|
 | `position` | `string`  | Position of the control | `topleft` |
@@ -111,6 +103,7 @@ Possible options are listed in the following table. More details are [in the cod
 | `strings` | `object`  | Strings used in the control. Options are `title`, `text`, `metersUnit`, `feetUnit`, `popup` and `outsideMapBoundsMsg` | see code |
 | `strings.popup` | `string` or `function`  | The string shown as popup. May contain the placeholders `{distance}` and `{unit}`. If this option is specified as function, it will be executed with a single parameter `{distance, unit}` and expected to return a string. | see code |
 | `locateOptions` | [`Locate options`](http://leafletjs.com/reference.html#map-locate-options)  | The default options passed to leaflets locate method. | see code |
+
 <!-- prettier-ignore-end -->
 
 For example, to customize the position and the title, you could write
@@ -172,7 +165,7 @@ To customize the behavior of the plugin, use L.extend to override `start`, `stop
 
 ```js
 L.Control.MyLocate = L.Control.Locate.extend({
-  _drawMarker: function () {
+  _drawMarker: function() {
     // override to customize the marker
   }
 });
@@ -216,8 +209,8 @@ This is a bug in Leaflet. Disable tap to fix it for now. See [this issue](https:
 
 ```js
 let map = new L.Map('map', {
-    tap: false,
-    ...
+  tap: false,
+  ...
 });
 ```
 
@@ -241,12 +234,9 @@ A new version is released with `npm run bump:minor`. Then push the new code with
 
 ### Terms
 
-- **active**: After we called `map.locate()` and before `map.stopLocate()`. Any time, the map can fire the `locationfound` or `locationerror` events.
-- **following**: Following refers to whether the map zooms and pans automatically when a new location is found.
+*active*: After we called `map.locate()` and before `map.stopLocate()`. Any time, the map can fire the `locationfound` or `locationerror` events.
 
-## Thanks
-
-To all [contributors](https://github.com/domoritz/leaflet-locatecontrol/contributors) and issue reporters.
+*following*: Following refers to whether the map zooms and pans automatically when a new location is found.
 
 ## License
 

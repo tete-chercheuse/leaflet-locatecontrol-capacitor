@@ -19,6 +19,14 @@
       <option name="SPACES_WITHIN_IMPORTS" value="true" />
       <option name="SPACE_BEFORE_ASYNC_ARROW_LPAREN" value="false" />
     </JSCodeStyleSettings>
+    <Markdown>
+      <option name="MIN_LINES_AROUND_HEADER" value="0" />
+      <option name="MIN_LINES_AROUND_BLOCK_ELEMENTS" value="0" />
+      <option name="MIN_LINES_BETWEEN_PARAGRAPHS" value="0" />
+      <option name="WRAP_TEXT_IF_LONG" value="false" />
+      <option name="WRAP_TEXT_INSIDE_BLOCKQUOTES" value="false" />
+      <option name="FORMAT_TABLES" value="false" />
+    </Markdown>
     <PHPCodeStyleSettings>
       <option name="ALIGN_KEY_VALUE_PAIRS" value="true" />
       <option name="PHPDOC_BLANK_LINE_BEFORE_TAGS" value="true" />
@@ -133,6 +141,10 @@
         <option name="CONTINUATION_INDENT_SIZE" value="4" />
         <option name="SMART_TABS" value="true" />
       </indentOptions>
+    </codeStyleSettings>
+    <codeStyleSettings language="Markdown">
+      <option name="RIGHT_MARGIN" value="0" />
+      <option name="WRAP_ON_TYPING" value="0" />
     </codeStyleSettings>
     <codeStyleSettings language="PHP">
       <option name="KEEP_FIRST_COLUMN_COMMENT" value="false" />
