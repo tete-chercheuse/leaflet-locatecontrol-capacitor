@@ -444,8 +444,14 @@ import { Geolocation } from "@capacitor/geolocation";
       }
 
       try {
-        let coords = await Geolocation.getCurrentPosition({ enableHighAccuracy: true });
-        this._event = coords;
+        const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true });
+        this._event = {
+          latlng: {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          },
+          accuracy: position.coords.accuracy
+        };
         this._onLocationFound(coords);
       }
       catch(e) {
@@ -458,7 +464,13 @@ import { Geolocation } from "@capacitor/geolocation";
           enableHighAccuracy: true
         }, (position) => {
           try {
-            this._onLocationFound(position);
+            this._onLocationFound({
+              latlng: {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+              },
+              accuracy: position.coords.accuracy
+            });
           }
           catch(e) {
             this._onLocationError(e);
