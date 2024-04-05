@@ -8,8 +8,6 @@ Tested with [Leaflet](http://leafletjs.com/) 1.9.2 and [Mapbox.js](https://docs.
 
 ### Set up:
 
-tl;dr
-
 1. Get CSS and JavaScript files
 2. Include CSS and JavaScript files
 3. Initialize plugin
@@ -18,31 +16,19 @@ tl;dr
 
 For testing purposes and development, you can use the latest version directly from my repository.
 
-For production environments, use [Bower](http://bower.io/) and run `bower install --save tete-chercheuse/leaflet-locatecontrol-capacitor` or [download the files from this repository](https://github.com/domoritz/leaflet-locatecontrol/archive/gh-pages.zip). Bower will always download the latest version and keep the code up to date. The original JS and CSS files are in [`\src`](https://github.com/domoritz/leaflet-locatecontrol/tree/gh-pages/src) and the minified versions suitable for production are in [`\dist`](https://github.com/domoritz/leaflet-locatecontrol/tree/gh-pages/dist).
+For production environments, use [Bower](http://bower.io/) and run `bower install --save tete-chercheuse/leaflet-locatecontrol-capacitor` or [download the files from this repository](https://github.com/tete-chercheuse/leaflet-locatecontrol-capacitor/archive/gh-pages.zip). Bower will always download the latest version and keep the code up to date. The original JS and CSS files are in [`\src`](https://github.com/tete-chercheuse/leaflet-locatecontrol-capacitor/tree/gh-pages/src) and the minified versions suitable for production are in [`\dist`](https://github.com/tete-chercheuse/leaflet-locatecontrol-capacitor/tree/gh-pages/dist).
 
-You can also get the latest version of the plugin with [npm](https://www.npmjs.org/). This plugin is available in the [npm repository](https://www.npmjs.org/package/leaflet.locatecontrol). Just run `npm install --save tete-chercheuse/leaflet-locatecontrol-capacitor`.
-
-The control is [available from JsDelivr CDN](https://www.jsdelivr.com/projects/leaflet.locatecontrol). If you don't need the latest version, you can use the [mapbox CDN](https://www.mapbox.com/mapbox.js/plugins/#leaflet-locatecontrol).
+You can also get the latest version of the plugin with [npm](https://www.npmjs.org/). Just run `npm install --save tete-chercheuse/leaflet-locatecontrol-capacitor`.
 
 #### Add the JavaScript and CSS files
 
 Then include the CSS and JavaScript files.
 
-##### With CDN
-
-In this example, we are loading the [files from the JsDelivr CDN](https://www.jsdelivr.com/package/npm/leaflet.locatecontrol?path=dist). In the URLs below, replace `[VERSION]` with the latest release number or remove `@[VERSION]` to always use the latest version.
-
-```html
-
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@[VERSION]/dist/L.Control.Locate.min.css" />
-<script src="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@[VERSION]/dist/L.Control.Locate.min.js" charset="utf-8"></script>
-```
-
 ##### With `npm`
 
 ```ts
-import 'leaflet.locatecontrol' // Import plugin
-import 'leaflet.locatecontrol/dist/L.Control.Locate.min.css' // Import styles
+import 'leaflet-locatecontrol-capacitor' // Import plugin
+import 'leaflet-locatecontrol-capacitor/dist/L.Control.Locate.css' // Import styles
 import L from 'leaflet' // Import L from leaflet to start using the plugin
 ```
 
@@ -79,17 +65,13 @@ Possible options are listed in the following table. More details are [in the cod
 | `clickBehavior` | `object`  | What to do when the user clicks on the control. Has three options `inView`, `inViewNotFollowing` and `outOfView`. Possible values are `stop` and `setView`, or the name of a behaviour to inherit from. | `{inView: 'stop', outOfView: 'setView', inViewNotFollowing: 'inView'}` |
 | `returnToPrevBounds` | `boolean`  | If set, save the map bounds just before centering to the user's location. When control is disabled, set the view back to the bounds that were saved. | `false` |
 | `cacheLocation` | `boolean` | Keep a cache of the location after the user deactivates the control. If set to false, the user has to wait until the locate API returns a new location before they see where they are again. | `true` |
-| `showCompass` | `boolean` | Show the compass bearing on top of the location marker | `true` |
 | `drawCircle` | `boolean`  | If set, a circle that shows the location accuracy is drawn. | `true` |
 | `drawMarker` | `boolean`  | If set, the marker at the users' location is drawn. | `true` |
 | `markerClass` | `class`  | The class to be used to create the marker. | `LocationMarker` |
-| `compassClass` | `class`  | The class to be used to create the marker. | `CompassMarker` |
 | `circleStyle` | [`Path options`](http://leafletjs.com/reference.html#path-options) | Accuracy circle style properties. | see code |
 | `markerStyle` | [`Path options`](http://leafletjs.com/reference.html#path-options) | Inner marker style properties. Only works if your marker class supports `setStyle`. | see code |
-| `compassStyle` | [`Path options`](http://leafletjs.com/reference.html#path-options) | Triangle compass heading marker style properties. Only works if your marker class supports `setStyle`. | see code |
 | `followCircleStyle` | [`Path options`](http://leafletjs.com/reference.html#path-options)  | Changes to the accuracy circle while following. Only need to provide changes. | `{}` |
 | `followMarkerStyle` | [`Path options`](http://leafletjs.com/reference.html#path-options)  | Changes to the inner marker while following. Only need to provide changes. | `{}` |
-| `followCompassStyle` | [`Path options`](http://leafletjs.com/reference.html#path-options)  | Changes to the compass marker while following. Only need to provide changes. | `{}` |
 | `icon` | `string`  | The CSS class for the icon. | `leaflet-control-locate-location-arrow` |
 | `iconLoading` | `string`  | The CSS class for the icon while loading. | `leaflet-control-locate-spinner` |
 | `iconElementTag` | `string`  | The element to be created for icons. | `span` |
@@ -121,21 +103,7 @@ var lc = L.control
 
 ## Screenshot
 
-![screenshot](https://raw.github.com/domoritz/leaflet-locatecontrol/gh-pages/screenshot.png "Screenshot showing the locate control")
-
-## Users
-
-Sites that use this locate control:
-
-- [OpenStreetMap](http://www.openstreetmap.org/) on the start page
-- [MapBox](https://www.mapbox.com/mapbox.js/example/v1.0.0/leaflet-locatecontrol/)
-- [wheelmap.org](http://wheelmap.org/map)
-- [OpenMensa](http://openmensa.org/)
-- [Maps Marker Pro](https://www.mapsmarker.com) (WordPress plugin)
-- [Bikemap](https://jackdougherty.github.io/bikemapcode/)
-- [MyRoutes](https://myroutes.io/)
-- [NearbyWiki](https://en.nearbywiki.org/)
-- ...
+![screenshot](https://raw.github.com/tete-chercheuse/leaflet-locatecontrol-capacitor/gh-pages/screenshot.png "Screenshot showing the locate control")
 
 ## Advanced Usage
 

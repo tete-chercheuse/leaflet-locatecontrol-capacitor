@@ -452,7 +452,6 @@ import { Geolocation } from "@capacitor/geolocation";
           },
           accuracy: position.coords.accuracy
         };
-        this._onLocationFound(coords);
       }
       catch(e) {
         this._onLocationError(e);
