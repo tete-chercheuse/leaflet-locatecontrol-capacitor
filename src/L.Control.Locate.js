@@ -117,44 +117,6 @@ import { Geolocation } from "@capacitor/geolocation";
     }
   });
 
-  const CompassMarker = LocationMarker.extend({
-    initialize(latlng, heading, options) {
-      L.Util.setOptions(this, options);
-      this._latlng = latlng;
-      this._heading = heading;
-      this.createIcon();
-    },
-
-    setHeading(heading) {
-      this._heading = heading;
-    },
-
-    /**
-     * Create a styled arrow compass marker
-     */
-    _getIconSVG(options, style) {
-      const r = options.radius;
-      const w = options.width + options.weight;
-      const h = (r + options.depth + options.weight) * 2;
-      const path = `M0,0 l${options.width / 2},${options.depth} l-${w},0 z`;
-      const svgstyle = `transform: rotate(${this._heading}deg)`;
-      const svg =
-        `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="-${w / 2} 0 ${w} ${h}" style="${svgstyle}">` +
-        `<path d="` +
-        path +
-        `" style="` +
-        style +
-        `" />` +
-        `</svg>`;
-      return {
-        className: "leaflet-control-locate-heading",
-        svg,
-        w,
-        h
-      };
-    }
-  });
-
   const LocateControl = L.Control.extend({
     options: {
       /** Position of the control */
@@ -231,12 +193,8 @@ import { Geolocation } from "@capacitor/geolocation";
       drawCircle: true,
       /** If set, the marker at the users' location is drawn. */
       drawMarker: true,
-      /** If set and supported then show the compass heading */
-      showCompass: true,
       /** The class to be used to create the marker. For example L.CircleMarker or L.Marker */
       markerClass: LocationMarker,
-      /** The class us be used to create the compass bearing arrow */
-      compassClass: CompassMarker,
       /** Accuracy circle style properties. NOTE these styles should match the css animations styles */
       circleStyle: {
         className: "leaflet-control-locate-circle",
@@ -255,17 +213,6 @@ import { Geolocation } from "@capacitor/geolocation";
         opacity: 1,
         radius: 9
       },
-      /** Compass */
-      compassStyle: {
-        fillColor: "#2A93EE",
-        fillOpacity: 1,
-        weight: 0,
-        color: "#fff",
-        opacity: 1,
-        radius: 9, // How far is the arrow from the center of the marker
-        width: 9, // Width of the arrow
-        depth: 6 // Length of the arrow
-      },
       /**
        * Changes to accuracy circle and inner marker while following.
        * It is only necessary to provide the properties that should change.
@@ -275,7 +222,6 @@ import { Geolocation } from "@capacitor/geolocation";
         // color: '#FFA500',
         // fillColor: '#FFB000'
       },
-      followCompassStyle: {},
       /** The CSS class for the icon. For example fa-location-arrow or fa-map-marker */
       icon: "leaflet-control-locate-location-arrow",
       iconLoading: "leaflet-control-locate-spinner",
@@ -355,7 +301,6 @@ import { Geolocation } from "@capacitor/geolocation";
       // extend the follow marker style and circle from the normal style
       this.options.followMarkerStyle = L.extend({}, this.options.markerStyle, this.options.followMarkerStyle);
       this.options.followCircleStyle = L.extend({}, this.options.circleStyle, this.options.followCircleStyle);
-      this.options.followCompassStyle = L.extend({}, this.options.compassStyle, this.options.followCompassStyle);
     },
 
     /**
@@ -368,7 +313,6 @@ import { Geolocation } from "@capacitor/geolocation";
       this._layer = this.options.layer || new L.LayerGroup();
       this._layer.addTo(map);
       this._event = undefined;
-      this._compassHeading = null;
       this._prevBounds = null;
 
       const linkAndIcon = this.options.createButtonCallback(container, this.options);
@@ -494,10 +438,22 @@ import { Geolocation } from "@capacitor/geolocation";
      * this._active is true.
      */
     async _activate() {
-      if(!this._active) {
-        this._active = true;
+
+      if(this._active || !this._map) {
+        return;
+      }
+
+      try {
         let coords = await Geolocation.getCurrentPosition({ enableHighAccuracy: true });
-        this._setEvent(coords.coords.latitude, coords.coords.longitude, coords.coords.accuracy);
+        this._event = coords;
+        this._onLocationFound(coords);
+      }
+      catch(e) {
+        this._onLocationError(e);
+      }
+
+      if(this.options.locateOptions.watch) {
+
         this.geolocationWatcherId = await Geolocation.watchPosition({
           enableHighAccuracy: true
         }, (position) => {
@@ -508,21 +464,14 @@ import { Geolocation } from "@capacitor/geolocation";
             this._onLocationError(e);
           }
         });
-
-        // bind event listeners               
-        this._map.on("dragstart", this._onDrag, this);
-        this._map.on("zoomstart", this._onZoom, this);
-        this._map.on("zoomend", this._onZoomEnd, this);
-        if(this.options.showCompass) {
-          const oriAbs = "ondeviceorientationabsolute" in window;
-          if(oriAbs || ("ondeviceorientation" in window)) {
-            const deviceorientation = () => {
-              L.DomEvent.on(window, oriAbs ? "deviceorientationabsolute" : "deviceorientation", this._onDeviceOrientation, this);
-            };
-            deviceorientation();
-          }
-        }
       }
+
+      this._active = true;
+
+      // bind event listeners
+      this._map.on("dragstart", this._onDrag, this);
+      this._map.on("zoomstart", this._onZoom, this);
+      this._map.on("zoomend", this._onZoomEnd, this);
     },
 
     /**
@@ -531,7 +480,15 @@ import { Geolocation } from "@capacitor/geolocation";
      * Override it to shutdown any functionalities you added on start.
      */
     _deactivate() {
-      if(this.geolocationWatcherId) Geolocation.clearWatch({ id: this.geolocationWatcherId });
+
+      if(!this._active || !this._map) {
+        return;
+      }
+
+      if(this.options.locateOptions.watch && this.geolocationWatcherId) {
+        Geolocation.clearWatch({ id: this.geolocationWatcherId });
+      }
+
       this._active = false;
 
       if(!this.options.cacheLocation) {
@@ -542,15 +499,6 @@ import { Geolocation } from "@capacitor/geolocation";
       this._map.off("dragstart", this._onDrag, this);
       this._map.off("zoomstart", this._onZoom, this);
       this._map.off("zoomend", this._onZoomEnd, this);
-      if(this.options.showCompass) {
-        this._compassHeading = null;
-        if("ondeviceorientationabsolute" in window) {
-          L.DomEvent.off(window, "deviceorientationabsolute", this._onDeviceOrientation, this);
-        }
-        else if("ondeviceorientation" in window) {
-          L.DomEvent.off(window, "deviceorientation", this._onDeviceOrientation, this);
-        }
-      }
     },
 
     /**
@@ -564,15 +512,15 @@ import { Geolocation } from "@capacitor/geolocation";
       }
       else {
         if(this._justClicked && this.options.initialZoomLevel !== false) {
-          var f = this.options.flyTo ? this._map.flyTo : this._map.setView;
+          const f = this.options.flyTo ? this._map.flyTo : this._map.setView;
           f.bind(this._map)([this._event.latitude, this._event.longitude], this.options.initialZoomLevel);
         }
         else if(this.options.keepCurrentZoomLevel) {
-          var f = this.options.flyTo ? this._map.flyTo : this._map.panTo;
+          const f = this.options.flyTo ? this._map.flyTo : this._map.panTo;
           f.bind(this._map)([this._event.latitude, this._event.longitude]);
         }
         else {
-          var f = this.options.flyTo ? this._map.flyToBounds : this._map.fitBounds;
+          const f = this.options.flyTo ? this._map.flyToBounds : this._map.fitBounds;
           // Ignore zoom events while setting the viewport as these would stop following
           this._ignoreEvent = true;
           f.bind(this._map)(this.options.getLocationBounds(this._event), {
@@ -584,37 +532,6 @@ import { Geolocation } from "@capacitor/geolocation";
             this._ignoreEvent = false;
           }, this);
         }
-      }
-    },
-
-    /**
-     *
-     */
-    _drawCompass() {
-      if(!this._event) {
-        return;
-      }
-
-      const latlng = this._event.latlng;
-
-      if(this.options.showCompass && latlng && this._compassHeading !== null) {
-        const cStyle = this._isFollowing() ? this.options.followCompassStyle : this.options.compassStyle;
-        if(!this._compass) {
-          this._compass = new this.options.compassClass(latlng, this._compassHeading, cStyle).addTo(this._layer);
-        }
-        else {
-          this._compass.setLatLng(latlng);
-          this._compass.setHeading(this._compassHeading);
-          // If the compassClass can be updated with setStyle, update it.
-          if(this._compass.setStyle) {
-            this._compass.setStyle(cStyle);
-          }
-        }
-        //
-      }
-      if(this._compass && (!this.options.showCompass || this._compassHeading === null)) {
-        this._compass.removeFrom(this._layer);
-        this._compass = null;
       }
     },
 
@@ -669,8 +586,6 @@ import { Geolocation } from "@capacitor/geolocation";
         }
       }
 
-      this._drawCompass();
-
       const t = this.options.strings.popup;
 
       function getPopupText() {
@@ -687,9 +602,6 @@ import { Geolocation } from "@capacitor/geolocation";
 
       if(this.options.showPopup && t && this._marker) {
         this._marker.bindPopup(getPopupText())._popup.setLatLng(latlng);
-      }
-      if(this.options.showPopup && t && this._compass) {
-        this._compass.bindPopup(getPopupText())._popup.setLatLng(latlng);
       }
     },
 
@@ -709,46 +621,6 @@ import { Geolocation } from "@capacitor/geolocation";
     _unload() {
       this.stop();
       this._map.off("unload", this._unload, this);
-    },
-
-    /**
-     * Sets the compass heading
-     */
-    _setCompassHeading(angle) {
-      if(!isNaN(parseFloat(angle)) && isFinite(angle)) {
-        angle = Math.round(angle);
-
-        this._compassHeading = angle;
-        L.Util.requestAnimFrame(this._drawCompass, this);
-      }
-      else {
-        this._compassHeading = null;
-      }
-    },
-
-    /**
-     * If the compass fails calibration just fail safely and remove the compass
-     */
-    _onCompassNeedsCalibration() {
-      this._setCompassHeading();
-    },
-
-    /**
-     * Process and normalise compass events
-     */
-    _onDeviceOrientation(e) {
-      if(!this._active) {
-        return;
-      }
-
-      if(e.webkitCompassHeading) {
-        // iOS
-        this._setCompassHeading(e.webkitCompassHeading);
-      }
-      else if(e.absolute && e.alpha) {
-        // Android
-        this._setCompassHeading(360 - e.alpha);
-      }
     },
 
     /**
@@ -835,12 +707,9 @@ import { Geolocation } from "@capacitor/geolocation";
     },
 
     /**
-     * After a zoom ends update the compass and handle sideways zooms
+     * After a zoom ends handle sideways zooms
      */
     _onZoomEnd() {
-      if(this._event) {
-        this._drawCompass();
-      }
 
       if(this._event && !this._ignoreEvent) {
         // If we have zoomed in and out and ended up sideways treat it as a pan
