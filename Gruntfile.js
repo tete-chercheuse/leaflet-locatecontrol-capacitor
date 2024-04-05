@@ -1,12 +1,10 @@
-module.exports = function (grunt) {
-  var banner = "/*! Version: <%= pkg.version %>\nCopyright (c) 2016 Dominik Moritz */\n";
+module.exports = function(grunt) {
 
   // Project configuration.
   grunt.initConfig({
     pkg: grunt.file.readJSON("package.json"),
     uglify: {
       options: {
-        banner: banner,
         preserveComments: false,
         sourceMap: true
       },
