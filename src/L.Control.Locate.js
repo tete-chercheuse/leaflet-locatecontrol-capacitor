@@ -141,23 +141,8 @@ import { Geolocation } from "@capacitor/geolocation";
        *                The map view follows the user's location until she pans.
        */
       setView: "untilPanOrZoom",
-      /** Keep the current map zoom level when setting the view and only pan. */
-      keepCurrentZoomLevel: false,
       /** After activating the plugin by clicking on the icon, zoom to the selected zoom level, even when keepCurrentZoomLevel is true. Set to 'false' to disable this feature. */
       initialZoomLevel: false,
-      /**
-       * This callback can be used to override the viewport tracking
-       * This function should return a LatLngBounds object.
-       *
-       * For example to extend the viewport to ensure that a particular LatLng is visible:
-       *
-       * getLocationBounds: function(locationEvent) {
-       *    return locationEvent.bounds.extend([-33.873085, 151.219273]);
-       * },
-       */
-      getLocationBounds(locationEvent) {
-        return locationEvent.bounds;
-      },
       /** Smooth pan and zoom to the location of the marker. Only works in Leaflet 1.0+. */
       flyTo: false,
       /**
@@ -446,6 +431,8 @@ import { Geolocation } from "@capacitor/geolocation";
       try {
         const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true });
         this._event = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
           latlng: {
             lat: position.coords.latitude,
             lng: position.coords.longitude
@@ -464,6 +451,8 @@ import { Geolocation } from "@capacitor/geolocation";
         }, (position) => {
           try {
             this._onLocationFound({
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
               latlng: {
                 lat: position.coords.latitude,
                 lng: position.coords.longitude
@@ -526,22 +515,9 @@ import { Geolocation } from "@capacitor/geolocation";
           const f = this.options.flyTo ? this._map.flyTo : this._map.setView;
           f.bind(this._map)([this._event.latitude, this._event.longitude], this.options.initialZoomLevel);
         }
-        else if(this.options.keepCurrentZoomLevel) {
+        else {
           const f = this.options.flyTo ? this._map.flyTo : this._map.panTo;
           f.bind(this._map)([this._event.latitude, this._event.longitude]);
-        }
-        else {
-          const f = this.options.flyTo ? this._map.flyToBounds : this._map.fitBounds;
-          // Ignore zoom events while setting the viewport as these would stop following
-          this._ignoreEvent = true;
-          f.bind(this._map)(this.options.getLocationBounds(this._event), {
-            padding: this.options.circlePadding,
-            maxZoom: this.options.initialZoomLevel || this.options.locateOptions.maxZoom
-          });
-          L.Util.requestAnimFrame(function() {
-            // Wait until after the next animFrame because the flyTo can be async
-            this._ignoreEvent = false;
-          }, this);
         }
       }
     },

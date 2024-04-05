@@ -77,7 +77,6 @@ Possible options are listed in the following table. More details are [in the cod
 | `iconElementTag` | `string`  | The element to be created for icons. | `span` |
 | `circlePadding` | `array`  | Padding around the accuracy circle. | `[0, 0]` |
 | `createButtonCallback` | `function`  | This callback can be used in case you would like to override button creation behavior. | see code |
-| `getLocationBounds` | `function`  | This callback can be used to override the viewport tracking behavior. | see code |
 | `onLocationError` | `function`  | This even is called when the user's location is outside the bounds set on the map. | see code |
 | `metric` | `boolean` | Use metric units. | `true` |
 | `onLocationOutsideMapBounds` | `function`  | Called when the user's location is outside the bounds set on the map. Called repeatedly when the user's location changes. | see code |
