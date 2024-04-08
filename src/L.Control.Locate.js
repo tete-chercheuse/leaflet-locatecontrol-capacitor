@@ -263,12 +263,8 @@ import { Geolocation } from "@capacitor/geolocation";
         popup: "You are within {distance} {unit} from this point",
         outsideMapBoundsMsg: "You seem located outside the boundaries of the map"
       },
-      /** The default options passed to leaflets locate method. */
       locateOptions: {
-        maxZoom: Infinity,
-        watch: true, // if you overwrite this, visualization cannot be updated
-        setView: false // have to set this to false because we have to
-        // do setView manually
+        watch: true // if you overwrite this, visualization cannot be updated
       }
     },
 
@@ -353,7 +349,7 @@ import { Geolocation } from "@capacitor/geolocation";
             break;
           case "stop":
             this.stop();
-            if(this.options.returnToPrevBounds) {
+            if(this.options.returnToPrevBounds && this._prevBounds) {
               const f = this.options.flyTo ? this._map.flyToBounds : this._map.fitBounds;
               f.bind(this._map)(this._prevBounds);
             }
@@ -428,9 +424,11 @@ import { Geolocation } from "@capacitor/geolocation";
         return;
       }
 
-      try {
-        const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true });
-        this._event = {
+      this._map.fire("locateactivate", this);
+      this._active = true;
+
+      const parsePosition = position => {
+        return {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
           latlng: {
@@ -439,16 +437,17 @@ import { Geolocation } from "@capacitor/geolocation";
           },
           accuracy: position.coords.accuracy
         };
+      };
 
-        if(this.options.returnToPrevBounds) {
-          this._prevBounds = this._map.getBounds();
-        }
+      try {
+
+        const currentPosition = await Geolocation.getCurrentPosition({ enableHighAccuracy: true });
+
+        this._onLocationFound(parsePosition(currentPosition));
       }
       catch(e) {
         this._onLocationError(e);
       }
-
-      this._active = true;
 
       // bind event listeners
       this._map.on("dragstart", this._onDrag, this);
@@ -456,26 +455,22 @@ import { Geolocation } from "@capacitor/geolocation";
       this._map.on("zoomend", this._onZoomEnd, this);
 
       if(this.options.locateOptions.watch) {
+
         try {
-          this.geolocationWatcherId = await Geolocation.watchPosition({
-            enableHighAccuracy: true
-          }, (position) => {
-            this._onLocationFound({
-              latitude: position.coords.latitude,
-              longitude: position.coords.longitude,
-              latlng: {
-                lat: position.coords.latitude,
-                lng: position.coords.longitude
-              },
-              accuracy: position.coords.accuracy
-            });
+          this.geolocationWatcherId = await Geolocation.watchPosition({ enableHighAccuracy: true }, (position, err) => {
+            if(position) {
+              this._onLocationFound(parsePosition(position));
+            }
+            else if(err) {
+              this._onLocationError(err);
+            }
           });
         }
         catch(e) {
           this._onLocationError(e);
         }
       }
-      
+
       return true;
     },
 
@@ -490,11 +485,12 @@ import { Geolocation } from "@capacitor/geolocation";
         return;
       }
 
+      this._map.fire("locatedeactivate", this);
+      this._active = false;
+
       if(this.options.locateOptions.watch && this.geolocationWatcherId) {
         Geolocation.clearWatch({ id: this.geolocationWatcherId });
       }
-
-      this._active = false;
 
       if(!this.options.cacheLocation) {
         this._event = undefined;
