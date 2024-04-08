@@ -371,8 +371,8 @@ import { Geolocation } from "@capacitor/geolocation";
      * - activates the engine
      * - draws the marker (if coordinates available)
      */
-    async start() {
-      await this._activate();
+    start() {
+      this._activate();
 
       if(this._event) {
         this._drawMarker(this._map);
@@ -470,8 +470,6 @@ import { Geolocation } from "@capacitor/geolocation";
           this._onLocationError(e);
         }
       }
-
-      return true;
     },
 
     /**
