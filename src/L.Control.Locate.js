@@ -424,6 +424,13 @@ import { Geolocation } from "@capacitor/geolocation";
         return;
       }
 
+      const permissions = await Geolocation.checkPermissions();
+
+      if(permissions.location === "denied") {
+        this._onLocationError(permissions);
+        return;
+      }
+
       this._map.fire("locateactivate", this);
       this._active = true;
 
@@ -440,9 +447,7 @@ import { Geolocation } from "@capacitor/geolocation";
       };
 
       try {
-
         const currentPosition = await Geolocation.getCurrentPosition({ enableHighAccuracy: true });
-
         this._onLocationFound(parsePosition(currentPosition));
       }
       catch(e) {
