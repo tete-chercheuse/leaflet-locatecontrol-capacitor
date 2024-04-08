@@ -375,8 +375,8 @@ import { Geolocation } from "@capacitor/geolocation";
      * - activates the engine
      * - draws the marker (if coordinates available)
      */
-    start() {
-      this._activate();
+    async start() {
+      await this._activate();
 
       if(this._event) {
         this._drawMarker(this._map);
@@ -439,17 +439,27 @@ import { Geolocation } from "@capacitor/geolocation";
           },
           accuracy: position.coords.accuracy
         };
+
+        if(this.options.returnToPrevBounds) {
+          this._prevBounds = this._map.getBounds();
+        }
       }
       catch(e) {
         this._onLocationError(e);
       }
 
-      if(this.options.locateOptions.watch) {
+      this._active = true;
 
-        this.geolocationWatcherId = await Geolocation.watchPosition({
-          enableHighAccuracy: true
-        }, (position) => {
-          try {
+      // bind event listeners
+      this._map.on("dragstart", this._onDrag, this);
+      this._map.on("zoomstart", this._onZoom, this);
+      this._map.on("zoomend", this._onZoomEnd, this);
+
+      if(this.options.locateOptions.watch) {
+        try {
+          this.geolocationWatcherId = await Geolocation.watchPosition({
+            enableHighAccuracy: true
+          }, (position) => {
             this._onLocationFound({
               latitude: position.coords.latitude,
               longitude: position.coords.longitude,
@@ -459,19 +469,14 @@ import { Geolocation } from "@capacitor/geolocation";
               },
               accuracy: position.coords.accuracy
             });
-          }
-          catch(e) {
-            this._onLocationError(e);
-          }
-        });
+          });
+        }
+        catch(e) {
+          this._onLocationError(e);
+        }
       }
-
-      this._active = true;
-
-      // bind event listeners
-      this._map.on("dragstart", this._onDrag, this);
-      this._map.on("zoomstart", this._onZoom, this);
-      this._map.on("zoomend", this._onZoomEnd, this);
+      
+      return true;
     },
 
     /**
@@ -674,7 +679,7 @@ import { Geolocation } from "@capacitor/geolocation";
      */
     _onDrag() {
       // only react to drags once we have a location
-      if(this._event && !this._ignoreEvent) {
+      if(this._event) {
         this._userPanned = true;
         this._updateContainerStyle();
         this._drawMarker();
@@ -686,7 +691,7 @@ import { Geolocation } from "@capacitor/geolocation";
      */
     _onZoom() {
       // only react to drags once we have a location
-      if(this._event && !this._ignoreEvent) {
+      if(this._event) {
         this._userZoomed = true;
         this._updateContainerStyle();
         this._drawMarker();
@@ -698,7 +703,7 @@ import { Geolocation } from "@capacitor/geolocation";
      */
     _onZoomEnd() {
 
-      if(this._event && !this._ignoreEvent) {
+      if(this._event) {
         // If we have zoomed in and out and ended up sideways treat it as a pan
         if(this._marker && !this._map.getBounds().pad(-0.3).contains(this._marker.getLatLng())) {
           this._userPanned = true;
